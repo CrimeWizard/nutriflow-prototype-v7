@@ -4,18 +4,24 @@ import { SearchBar } from '../components/SearchBar';
 import { getRestaurantsInArea } from '../data/mockData';
 import { useApp } from '../context/AppContext';
 import { matchesQuery } from '../lib/search';
+import {
+  RESTAURANT_FILTERS, restaurantMatchesFilter, type RestaurantFilter,
+} from '../lib/restaurantFilters';
 
 export function Restaurants() {
   const { profile, openRestaurant, goTab } = useApp();
   const [query, setQuery] = useState('');
+  const [filter, setFilter] = useState<RestaurantFilter>('all');
+
   const list = useMemo(() => {
     const all = getRestaurantsInArea(profile.area);
-    if (!query.trim()) return all;
     return all.filter((r) => {
+      if (!restaurantMatchesFilter(r, filter)) return false;
+      if (!query.trim()) return true;
       const mealMatch = r.meals.some((m) => matchesQuery(query, m.name, m.description, ...m.tags));
       return matchesQuery(query, r.name, r.cuisine, ...r.tags) || mealMatch;
     });
-  }, [profile.area, query]);
+  }, [profile.area, query, filter]);
 
   return (
     <div className="scroll fade-in">
@@ -26,15 +32,28 @@ export function Restaurants() {
 
       <SearchBar value={query} onChange={setQuery} placeholder="Search restaurants or meals…" />
 
+      <div className="category-scroll">
+        {RESTAURANT_FILTERS.map((f) => (
+          <button
+            key={f.id}
+            type="button"
+            className={`category-chip ${filter === f.id ? 'selected' : ''}`}
+            onClick={() => setFilter(f.id)}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+
       {list.length === 0 ? (
         <div className="empty">
-          <h3>{query ? 'No matches' : `No restaurants in ${profile.area} yet`}</h3>
+          <h3>{query || filter !== 'all' ? 'No matches' : `No restaurants in ${profile.area} yet`}</h3>
           <p>
-            {query
-              ? 'Try a different name or cuisine.'
+            {query || filter !== 'all'
+              ? 'Try another filter or search term.'
               : "We're expanding — cook at home from the supermarket for now."}
           </p>
-          {!query && (
+          {!query && filter === 'all' && (
             <button type="button" className="btn btn-primary" style={{ marginTop: 16 }} onClick={() => goTab('groceries')}>
               Browse groceries
             </button>

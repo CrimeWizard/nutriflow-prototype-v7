@@ -1,4 +1,5 @@
-import { getDefaultProducts, quickMeals, recipes, restaurants } from '../data/mockData';
+import { quickMeals, recipes, restaurants } from '../data/mockData';
+import { recipeNutrition } from '../lib/recipeNutrition';
 import type { Goal, Restaurant, RestaurantMeal } from '../types';
 import type { MealSlotId } from './types';
 
@@ -21,6 +22,8 @@ export interface RecipePick {
   recipeId: string;
   title: string;
   price: number;
+  protein: number;
+  calories: number;
   image: string;
   tags: string[];
 }
@@ -58,14 +61,19 @@ function mealToPick(r: Restaurant, m: RestaurantMeal, inArea: boolean): Restaura
 }
 
 function flattenRecipes(): RecipePick[] {
-  return recipes.map((r) => ({
-    kind: 'recipe',
-    recipeId: r.id,
-    title: r.name,
-    price: getDefaultProducts(r).reduce((s, p) => s + p.price, 0),
-    image: r.image,
-    tags: r.tags,
-  }));
+  return recipes.map((r) => {
+    const n = recipeNutrition(r);
+    return {
+      kind: 'recipe',
+      recipeId: r.id,
+      title: r.name,
+      price: n.costPerServing,
+      protein: n.protein,
+      calories: n.calories,
+      image: r.image,
+      tags: r.tags,
+    };
+  });
 }
 
 const BREAKFAST_TAGS = new Set(['breakfast', 'sweet']);

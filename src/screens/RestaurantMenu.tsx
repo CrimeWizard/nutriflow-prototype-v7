@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, Plus, Star } from 'lucide-react';
 import { FavoriteButton } from '../components/FavoriteButton';
+import { GoalFitBadge } from '../components/GoalFitBadge';
 import { SearchBar } from '../components/SearchBar';
 import { useApp } from '../context/AppContext';
 import { mealFavoriteKey } from '../lib/favorites';
@@ -9,9 +10,16 @@ import { formatEgp } from '../utils';
 
 export function RestaurantMenu() {
   const {
-    activeRestaurant, closeRestaurant, addMealToCart, isFavorite, toggleFavorite,
+    profile, activeRestaurant, highlightedMealId, closeRestaurant, addMealToCart,
+    isFavorite, toggleFavorite,
   } = useApp();
   const [query, setQuery] = useState('');
+
+  useEffect(() => {
+    if (!highlightedMealId) return;
+    const el = document.getElementById(`meal-${highlightedMealId}`);
+    el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [highlightedMealId, activeRestaurant]);
 
   const meals = useMemo(() => {
     if (!activeRestaurant) return [];
@@ -55,7 +63,11 @@ export function RestaurantMenu() {
         ) : meals.map((meal) => {
           const favKey = mealFavoriteKey(activeRestaurant.id, meal.id);
           return (
-            <div key={meal.id} className="menu-item">
+            <div
+              key={meal.id}
+              id={`meal-${meal.id}`}
+              className={`menu-item${meal.id === highlightedMealId ? ' menu-item--highlight' : ''}`}
+            >
               <div className="menu-item-thumb">{meal.image}</div>
               <div className="menu-item-body">
                 <div className="menu-item-title-row">
@@ -78,6 +90,7 @@ export function RestaurantMenu() {
                 <div className="menu-nutrition">
                   {meal.protein}g protein · {meal.calories} cal
                 </div>
+                <GoalFitBadge goal={profile.goal} meal={meal} />
                 <div className="tags" style={{ marginTop: 8 }}>
                   {meal.tags.map((t) => <span key={t} className="tag">{t}</span>)}
                 </div>

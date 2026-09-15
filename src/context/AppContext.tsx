@@ -1,5 +1,5 @@
 import {
-  createContext, useCallback, useContext, useMemo, useState, type ReactNode,
+  createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode,
 } from 'react';
 import type {
   CartItem, DeliveryGroup, Favorite, Order, Recipe, Restaurant, Screen, Tab, UserProfile,
@@ -15,9 +15,9 @@ import {
 } from '../cartUtils';
 import {
   findShopProduct, getDefaultProducts, getQuickMeal, getRecipe, getRestaurant,
-  getSupermarket,
+  getShopProduct, getSupermarket,
 } from '../data/mockData';
-import { generateOrderId, getTodayKey } from '../utils';
+import { formatEgp, generateOrderId, getTodayKey } from '../utils';
 
 type CartItemInput = Omit<CartItem, 'cartLineId' | 'quantity'>;
 
@@ -40,6 +40,7 @@ interface AppState {
   onboardingStep: number;
   cart: CartItem[];
   activeRestaurant: Restaurant | null;
+  highlightedMealId: string | null;
   ingredientRecipe: Recipe | null;
   ingredientSelections: Record<string, string>;
   lastOrder: Order | null;
@@ -64,14 +65,16 @@ interface AppContextValue extends AppState {
   removeCartLine: (cartLineId: string) => void;
   updateCartQuantity: (cartLineId: string, quantity: number) => void;
   removeCartGroup: (groupKey: string) => void;
-  openRestaurant: (restaurant: Restaurant) => void;
+  openRestaurant: (restaurant: Restaurant, mealId?: string) => void;
   closeRestaurant: () => void;
+  addShopProductToCart: (productId: string) => boolean;
   addMealToCart: (restaurant: Restaurant, mealId: string) => void;
   openIngredients: (recipe: Recipe) => void;
   closeIngredients: () => void;
   setIngredientSelection: (ingredientId: string, productId: string) => void;
   addIngredientsToCart: () => void;
   addPlannedMealsToCart: (dayKey: DayKey) => void;
+  addPlannedWeekToCart: () => void;
   addPlannedMealToCart: (meal: PlannedMeal) => void;
   setSelectedPlanDay: (day: DayKey) => void;
   placeOrder: () => Order;
@@ -133,6 +136,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [onboardingStep, setOnboardingStep] = useState(0);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [activeRestaurant, setActiveRestaurant] = useState<Restaurant | null>(null);
+  const [highlightedMealId, setHighlightedMealId] = useState<string | null>(null);
   const [ingredientRecipe, setIngredientRecipe] = useState<Recipe | null>(null);
   const [ingredientSelections, setIngredientSelections] = useState<Record<string, string>>({});
   const [lastOrder, setLastOrder] = useState<Order | null>(null);
@@ -141,6 +145,31 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [toast, setToast] = useState<string | null>(null);
   const [selectedSupermarketId, setSelectedSupermarketIdState] = useState(loadSupermarketId);
   const [selectedPlanDay, setSelectedPlanDay] = useState<DayKey>(getTodayKey());
+
+  const DEMO_AUTO_DELIVER_MS = 90_000;
+
+  useEffect(() => {
+    const tick = () => {
+      const now = Date.now();
+      setOrderHistory((h) => {
+        let changed = false;
+        const next = h.map((o) => {
+          if (o.status !== 'active') return o;
+          const age = now - new Date(o.placedAt).getTime();
+          if (age >= DEMO_AUTO_DELIVER_MS) {
+            changed = true;
+            return { ...o, status: 'delivered' as const, deliveredAt: new Date().toISOString() };
+          }
+          return o;
+        });
+        if (changed) saveOrderHistory(next);
+        return changed ? next : h;
+      });
+    };
+    const id = window.setInterval(tick, 5000);
+    tick();
+    return () => window.clearInterval(id);
+  }, []);
 
   const weeklyPlan = useMemo(
     () => generateWeeklyPlan({
@@ -239,16 +268,36 @@ export function AppProvider({ children }: { children: ReactNode }) {
     showToast(`Removed ${vendorName} from cart`);
   }, [showToast]);
 
-  const openRestaurant = useCallback((restaurant: Restaurant) => {
+  const openRestaurant = useCallback((restaurant: Restaurant, mealId?: string) => {
     setActiveRestaurant(restaurant);
+    setHighlightedMealId(mealId ?? null);
     setScreen('restaurant-menu');
   }, []);
 
   const closeRestaurant = useCallback(() => {
     setActiveRestaurant(null);
+    setHighlightedMealId(null);
     setScreen('restaurants');
     setTab('restaurants');
   }, []);
+
+  const addShopProductToCart = useCallback((productId: string) => {
+    const p = getShopProduct(selectedSupermarketId, productId);
+    const sm = getSupermarket(selectedSupermarketId);
+    if (!p || !sm) return false;
+    addToCart([{
+      productId: p.id,
+      brand: p.brand,
+      name: p.name,
+      size: p.size,
+      price: p.price,
+      image: p.image,
+      source: 'supermarket',
+      vendorName: sm.name,
+    }]);
+    showToast(`Added ${p.brand} ${p.name}`);
+    return true;
+  }, [selectedSupermarketId, addToCart, showToast]);
 
   const addMealToCart = useCallback((restaurant: Restaurant, mealId: string) => {
     const meal = restaurant.meals.find((m) => m.id === mealId);
@@ -375,6 +424,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setScreen('cart');
   }, [weeklyPlan, plannedMealToCartItems, addToCart, showToast]);
 
+  const addPlannedWeekToCart = useCallback(() => {
+    const items: CartItemInput[] = [];
+    weeklyPlan.days.forEach((day) => {
+      day.meals.forEach((meal) => {
+        items.push(...plannedMealToCartItems(meal));
+      });
+    });
+    if (items.length === 0) return;
+    const weekTotal = weeklyPlan.days.reduce((s, d) => s + d.dayTotal, 0);
+    addToCart(items);
+    showToast(`Your week added · ~${formatEgp(weekTotal)} · review cart before checkout`);
+    setTab('cart');
+    setScreen('cart');
+  }, [weeklyPlan, plannedMealToCartItems, addToCart, showToast]);
+
   const placeOrder = useCallback(() => {
     const deliveries = buildDeliveryGroups(cart);
     const order: Order = {
@@ -445,17 +509,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const value: AppContextValue = {
     screen, tab, profile, onboardingStep, cart,
-    activeRestaurant, ingredientRecipe, ingredientSelections,
+    activeRestaurant, highlightedMealId, ingredientRecipe, ingredientSelections,
     lastOrder, orderHistory, favorites, toast, selectedSupermarketId,
     selectedPlanDay, weeklyPlan,
     setScreen, setTab, goTab, setProfile, setOnboardingStep,
     completeOnboarding, resetOnboarding, showToast, addToCart,
     removeCartLine, updateCartQuantity, removeCartGroup,
-    openRestaurant, closeRestaurant, addMealToCart,
+    openRestaurant, closeRestaurant, addMealToCart, addShopProductToCart,
     openIngredients, closeIngredients, setIngredientSelection: (ingredientId, productId) => {
       setIngredientSelections((s) => ({ ...s, [ingredientId]: productId }));
     },
-    addIngredientsToCart, addPlannedMealsToCart, addPlannedMealToCart,
+    addIngredientsToCart, addPlannedMealsToCart, addPlannedWeekToCart, addPlannedMealToCart,
     setSelectedPlanDay, placeOrder, markOrderDelivered,
     reorderFromDelivery, reorderFromOrder, isFavorite, toggleFavorite,
     setSelectedSupermarketId, cartTotal,

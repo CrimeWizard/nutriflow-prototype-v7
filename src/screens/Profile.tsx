@@ -5,8 +5,8 @@ import { goalLabel, formatEgp, WEEK_ORDER } from '../utils';
 
 export function Profile() {
   const {
-    profile, setProfile, orderHistory, favorites, resetOnboarding, setScreen,
-    openRestaurant, openIngredients, goTab, showToast,
+    profile, setProfile, orderHistory, favorites, resetOnboarding, setScreen, setTab,
+    openRestaurant, openIngredients, goTab, showToast, addShopProductToCart,
   } = useApp();
 
   const toggleDay = (day: string) => {
@@ -17,9 +17,9 @@ export function Profile() {
   };
 
   const openFavorite = (fav: typeof favorites[number]) => {
-    if (fav.kind === 'meal' && fav.restaurantId) {
+    if (fav.kind === 'meal' && fav.restaurantId && fav.mealId) {
       const r = getRestaurant(fav.restaurantId);
-      if (r) openRestaurant(r);
+      if (r) openRestaurant(r, fav.mealId);
       return;
     }
     if (fav.kind === 'recipe' && fav.recipeId) {
@@ -28,8 +28,13 @@ export function Profile() {
       return;
     }
     if (fav.kind === 'product' && fav.productId) {
-      goTab('groceries');
-      showToast('Find it in Groceries → Shop');
+      if (addShopProductToCart(fav.productId)) {
+        setTab('cart');
+        setScreen('cart');
+      } else {
+        goTab('groceries');
+        showToast('Switch supermarket in Groceries if this item isn’t available');
+      }
     }
   };
 

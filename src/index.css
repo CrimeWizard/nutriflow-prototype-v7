@@ -1624,6 +1624,41 @@ label.field-label {
 }
 .menu-item-title-row h3 { flex: 1; }
 
+.menu-item--highlight {
+  border-color: var(--green);
+  background: var(--green-subtle);
+  box-shadow: 0 0 0 2px rgba(58, 148, 114, 0.2);
+}
+
+.goal-fit-badge {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 999px;
+}
+.goal-fit-badge--strong {
+  background: var(--green-subtle);
+  color: var(--green-hover);
+}
+.goal-fit-badge--soft {
+  background: var(--slate-100);
+  color: var(--slate-600);
+}
+
+.hero-order-week {
+  width: 100%;
+  margin-top: 14px;
+}
+.hero-order-hint {
+  font-size: 11px;
+  color: var(--slate-500);
+  margin-top: 8px;
+  text-align: center;
+  line-height: 1.4;
+}
+
 .staples-scroll {
   display: flex;
   gap: 10px;

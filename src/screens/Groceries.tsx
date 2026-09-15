@@ -8,7 +8,7 @@ import {
 import { useApp } from '../context/AppContext';
 import { productFavoriteKey, recipeFavoriteKey } from '../lib/favorites';
 import { matchesQuery } from '../lib/search';
-import { getStapleProducts } from '../lib/staples';
+import { getStapleProducts, hasGroceryOrderHistory } from '../lib/staples';
 import { formatEgp } from '../utils';
 import type { ProductCategory, ShopProduct } from '../types';
 
@@ -45,6 +45,7 @@ export function Groceries() {
     () => getStapleProducts(selectedSupermarketId, orderHistory),
     [selectedSupermarketId, orderHistory],
   );
+  const staplesFromHistory = hasGroceryOrderHistory(orderHistory);
 
   const filteredProducts = useMemo(() => {
     if (!query.trim()) return allProducts;
@@ -150,7 +151,7 @@ export function Groceries() {
 
           {staples.length > 0 && !query && (
             <>
-              <p className="section-title">Your staples</p>
+              <p className="section-title">{staplesFromHistory ? 'Your staples' : 'Suggested staples'}</p>
               <div className="staples-scroll">
                 {staples.map((p) => (
                   <button key={p.id} type="button" className="staple-card" onClick={() => addProduct(p)}>

@@ -65,6 +65,8 @@ function toPlannedMeal(
     source: 'recipe',
     recipeId: pick.recipeId,
     estimatedPrice: pick.price,
+    protein: pick.protein,
+    calories: pick.calories,
     image: pick.image,
   };
 }

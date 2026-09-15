@@ -1,6 +1,6 @@
 # NutriFlow Prototype v7
 
-**Pillar 3 — depth & habit** — reorder, search, favorites, staples. Built on v6 commerce + v5 weekly plan.
+**Pillar 3 + v7.1/v7.2 polish** — reorder, search, favorites, staples, filters, goal badges, order my week. Built on v6 commerce + v5 weekly plan.
 
 Egypt-first, for all budgets.
 
@@ -11,6 +11,21 @@ Egypt-first, for all budgets.
 | v5 | 1 | Smart weekly plan (Sat–Fri), gym-aware meals |
 | v6 | 2 | Honest checkout, cart control, orders persistence |
 | **v7** | **3** | Reorder, search, favorites, staples |
+
+## v7.2 polish
+
+- **Restaurant filters** — High protein, meal prep, breakfast chips on Eat out
+- **Goal badges** — “Fits your goal” / “Great for bulk” on restaurant menus
+- **Order my week** — one-tap add full Sat–Fri plan to cart from Home hero
+- **Richer menus** — a few more meals at Green Bite & Lean & Clean
+
+## v7.1 polish
+
+- **Recipe plan costs** use per-serving estimates (not full ingredient packs)
+- **Recipe protein** included in daily plan totals
+- **Favorites** — product adds to cart; meal opens menu at that dish
+- **Staples** labeled “Suggested” until you’ve ordered groceries
+- **Orders** auto-mark delivered after ~90s in demo (+ hint on Home)
 
 ## What's new in v7
 

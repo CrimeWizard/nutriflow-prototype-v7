@@ -10,6 +10,10 @@ const DEFAULT_STAPLES: { brand: string; name: string }[] = [
   { brand: 'El Wadi', name: 'White Eggs' },
 ];
 
+export function hasGroceryOrderHistory(orderHistory: Order[]): boolean {
+  return orderHistory.some((o) => o.deliveries.some((d) => d.source === 'supermarket'));
+}
+
 export function getStapleProducts(supermarketId: string, orderHistory: Order[]): ShopProduct[] {
   const seen = new Set<string>();
   const result: ShopProduct[] = [];

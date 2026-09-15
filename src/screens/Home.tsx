@@ -32,7 +32,7 @@ function SourceBadge({ source }: { source: string }) {
 export function Home() {
   const {
     profile, weeklyPlan, selectedPlanDay, setSelectedPlanDay,
-    openRestaurant, openIngredients, addPlannedMealsToCart, addPlannedMealToCart,
+    openRestaurant, openIngredients, addPlannedWeekToCart, addPlannedMealsToCart, addPlannedMealToCart,
     orderHistory, setScreen, reorderFromDelivery,
   } = useApp();
 
@@ -56,6 +56,7 @@ export function Home() {
   const { summary } = weeklyPlan;
   const dailyCap = dailyBudgetMax(profile.budgetTier);
   const withinBudget = profile.budgetTier === 'flexible' || summary.avgDailyCost <= dailyCap;
+  const weekTotal = weeklyPlan.days.reduce((s, d) => s + d.dayTotal, 0);
 
   const handleMealClick = (meal: PlannedMeal) => {
     if (meal.source === 'restaurant' && meal.restaurantId) {
@@ -119,6 +120,7 @@ export function Home() {
                 <p>
                   {order.deliveries.length} {order.deliveries.length === 1 ? 'delivery' : 'deliveries'}
                   {' · '}{formatEgp(order.total)} · Pay on delivery
+                  {' · '}Mark delivered in Orders when it arrives
                 </p>
                 {order.deliveries.map((d) => (
                   <span key={d.id} className="active-order-eta">
@@ -152,6 +154,15 @@ export function Home() {
             )}
           </span>
         </div>
+        <button
+          type="button"
+          className="btn btn-primary hero-order-week"
+          onClick={() => addPlannedWeekToCart()}
+        >
+          <ShoppingBasket size={18} />
+          Order my week · ~{formatEgp(weekTotal)}
+        </button>
+        <p className="hero-order-hint">Review cart before checkout — split deliveries per vendor</p>
       </div>
 
       <p className="section-title">This week</p>

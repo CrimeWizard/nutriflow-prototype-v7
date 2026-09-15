@@ -78,6 +78,7 @@ export const restaurants: Restaurant[] = [
       { id: 'gb-2', name: 'Salmon Power Bowl', description: 'Quinoa, salmon, edamame, sesame dressing', price: 220, protein: 35, calories: 420, image: '🐟', tags: ['omega-3'] },
       { id: 'gb-3', name: 'Turkey Protein Wrap', description: 'Whole wheat wrap, turkey, hummus, salad', price: 145, protein: 32, calories: 380, image: '🌯', tags: ['lunch'] },
       { id: 'gb-4', name: 'Greek Yogurt Parfait', description: 'Almarai yogurt, berries, granola, honey', price: 95, protein: 18, calories: 280, image: '🥣', tags: ['breakfast'] },
+      { id: 'gb-5', name: 'Steak & Sweet Potato', description: 'Lean steak, roasted sweet potato, greens', price: 195, protein: 40, calories: 430, image: '🥩', tags: ['post-workout', 'high-protein'] },
     ],
   },
   {
@@ -123,6 +124,7 @@ export const restaurants: Restaurant[] = [
       { id: 'lc-1', name: 'Weekly Prep Box (5 meals)', description: 'Rotating high-protein meals, 5 containers', price: 650, protein: 40, calories: 450, image: '📦', tags: ['meal-prep'] },
       { id: 'lc-2', name: 'Beef & Rice Box', description: 'Lean beef, brown rice, roasted peppers', price: 165, protein: 36, calories: 420, image: '🥩', tags: ['high-protein'] },
       { id: 'lc-3', name: 'Veggie Protein Bowl', description: 'Tofu, chickpeas, tahini, roasted veg', price: 140, protein: 22, calories: 380, image: '🥬', tags: ['vegetarian'] },
+      { id: 'lc-4', name: 'Breakfast Egg Box', description: 'Boiled eggs, labneh, cucumber, whole wheat bread', price: 105, protein: 24, calories: 310, image: '🥚', tags: ['breakfast', 'meal-prep'] },
     ],
   },
   {
@@ -426,6 +428,10 @@ export function getDefaultProducts(recipe: Recipe) {
 
 export function getQuickMeal(id: string) {
   return quickMeals.find((q) => q.id === id);
+}
+
+export function getShopProduct(supermarketId: string, productId: string) {
+  return shopProducts.find((p) => p.id === productId && p.supermarketId === supermarketId);
 }
 
 export function findShopProduct(supermarketId: string, brand: string, name: string) {
